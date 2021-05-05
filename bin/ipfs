@@ -1,0 +1,75 @@
+#!/bin/bash
+
+source 'error.trap'
+touch error.trap.log
+
+TIME=$(date +%s)
+
+export LC_ALL=C
+
+if ! hash awk 2>/dev/null; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        if hash brew 2>/dev/null; then
+            brew install awk
+        fi
+    fi
+    if [[ "$OSTYPE" == "linux"* ]]; then
+        #CHECK APT
+        if [[ "$OSTYPE" == "linux-gnu" ]]; then
+            if hash apt 2>/dev/null; then
+                apt install awk
+            fi
+        fi
+        if [[ "$OSTYPE" == "linux-musl" ]]; then
+            if hash apk 2>/dev/null; then
+                apk add awk
+            fi
+        fi
+        if [[ "$OSTYPE" == "linux-arm"* ]]; then
+            if hash apt 2>/dev/null; then
+                apt install awk
+            fi
+        fi
+    fi
+fi
+ipfs-help (){
+    echo '' 
+    echo '     [USAGE]:'
+    echo '' 
+    echo '         stats [COMMANDS] [ARG]'
+    echo '' 
+    echo '     [COMMANDS]:'
+    echo '' 
+    echo '         start        - executes /entrypoint'
+    echo '         -id          - returns stats docker id'
+    echo '         -tag         - returns stats docker tag'
+    echo '         -d   [ARG]   - send ARG to bitcoind'
+    echo '         -cli [ARG]   - send ARG to bitcoin-cli'
+    echo '' 
+    echo '' 
+}
+#find our docker service
+if hash docker 2>/dev/null; then
+    IPFS_HOST_ID=$(docker ps | awk '/ipfs_host/'|awk ' {print $1}' | awk 'NR==1')
+    export IPFS_HOST_ID
+    IPFS_HOST_TAG=$(docker ps | awk '/ipfs_host/'|awk ' {print $2}' | awk 'NR==1')
+    export IPFS_HOST_TAG
+
+for ((i=1;i<=$#;i++));
+    do
+    #TODO more here
+        if [ ${!i} = "start" ]; then
+            ((i++))
+            docker exec -it $IPFS_HOST_ID sh -c  "ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://0.0.0.0:5001", "http://localhost:3000", "http://127.0.0.1:5001", "https://webui.ipfs.io"]'"
+            docker exec -it $IPFS_HOST_ID sh -c  "ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'"
+            docker exec -it $IPFS_HOST_ID sh -c  "/entrypoint"
+        elif [ ${!i} = "-log" ]; then
+            ((i++))
+            logFile=${!i};
+        else
+            ipfs-help
+        fi
+    done;
+else
+    ipfs $1 
+fi

@@ -1,6 +1,5 @@
 # Note: when updating the go minor version here, also update the go-channel in snap/snapcraft.yml
 FROM golang:1.14.4-buster 
-LABEL maintainer="Steven Allen <steven@stebalien.com>"
 
 # Install deps
 RUN apt-get update && apt-get install -y \
@@ -101,6 +100,7 @@ VOLUME $IPFS_PATH
 # The default logging level
 ENV IPFS_LOGGING ""
 
+RUN apt-get install -y curl
 # This just makes sure that:
 # 1. There's an fs-repo, and initializes one if there isn't.
 # 2. The API and Gateway are accessible from outside the container.
@@ -108,3 +108,8 @@ ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/start_ipfs"]
 
 # Execute the daemon subcommand by default
 CMD ["daemon", "--migrate=true"]
+
+/ # ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://0.0.0.0:5001", "http://localhost:3000", "http://127.0.0.1:5001", "https://webui.ipfs.io"]'
+/ # ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'
+/ # ipfs daemon stop
+Error: expected 0 argument(s), got 1
