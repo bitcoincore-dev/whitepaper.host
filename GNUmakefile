@@ -79,6 +79,10 @@ CMD_ARGUMENTS							:= $(cmd)
 endif
 export CMD_ARGUMENTS
 ################################################################################
+# PROJECT_NAME defaults to name of the current directory.
+PROJECT_NAME							:= $(notdir $(PWD))
+export PROJECT_NAME
+################################################################################
 .PHONY: commands-report
 commands-report: report
 	@echo ''
@@ -188,10 +192,19 @@ report:
 	@echo '        - GIT_REPO_NAME=${GIT_REPO_NAME}'
 	@echo '        - GIT_REPO_PATH=${GIT_REPO_PATH}'
 ################################################################################
+.PHONY: init
+init:
+	$( shell [ -d "/usr/local/bin/ipfs"       ] && install -v bin/ipfs /usr/local/bin/ipfs)
+	$( shell [ -d "/usr/local/bin/ipfs-init"  ] && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-init)
+	$( shell [ -d "/usr/local/bin/ipfs-host"  ] && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-host)
+	$( shell [ -d "/usr/local/bin/ipfs-start" ] && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-start)
+.PHONY: build-host
+build-host:
+	docker build -f Dockerfile 
 .PHONY: host
-host:
-	install -v bin/ipfs /usr/local/bin/ipfs
-	docker run -d --name ipfs_host_$(TIME) -v $(ipfs_staging):/export -v $(ipfs_data):/data/ipfs -p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:$(port):8080 -p 127.0.0.1:8081:8081 -p 127.0.0.1:5001:5001 ipfs/go-ipfs:latest
+host: init
+	#docker run -d --name ipfs_host_$(TIME) -v $(ipfs_staging):/export -v $(ipfs_data):/data/ipfs -p 127.0.0.1:$(port):8080 -p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:8081:8081 -p 127.0.0.1:5001:5001 ipfs/go-ipfs:latest
+	docker-compose $(VERBOSE) -p $(PROJECT_NAME)_$(HOST_UID) run host -d --name ipfs_host_$(TIME) -v $(ipfs_staging):/export -v $(ipfs_data):/data/ipfs -p 127.0.0.1:$(port):8080 -p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:8081:8081 -p 127.0.0.1:5001:5001 ipfs/go-ipfs:latest
 ################################################################################
 package-all:
 	bash -c 'cat ~/GH_TOKEN.txt | docker login docker.pkg.github.com -u RandyMcMillan --password-stdin'

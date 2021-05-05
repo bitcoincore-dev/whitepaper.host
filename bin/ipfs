@@ -36,7 +36,7 @@ ipfs-help (){
     echo '' 
     echo '     [USAGE]:'
     echo '' 
-    echo '         stats [COMMANDS] [ARG]'
+    echo '         ipfs [COMMANDS] [ARG]'
     echo '' 
     echo '     [COMMANDS]:'
     echo '' 
@@ -62,10 +62,14 @@ for ((i=1;i<=$#;i++));
             ((i++))
             docker exec -it $IPFS_HOST_ID sh -c  "ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["http://0.0.0.0:5001", "http://localhost:3000", "http://127.0.0.1:5001", "https://webui.ipfs.io"]'"
             docker exec -it $IPFS_HOST_ID sh -c  "ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["PUT", "POST"]'"
-            docker exec -it $IPFS_HOST_ID sh -c  "/entrypoint"
-        elif [ ${!i} = "-log" ]; then
+            #docker exec -it $IPFS_HOST_ID sh -c  "/entrypoint"
+            #ipfs install-bitcoin-core
+        elif [ ${!i} = "install-bitcoin-core" ]; then
             ((i++))
-            logFile=${!i};
+            docker exec -it $IPFS_HOST_ID sh -c  "apt update && apt install snapd && snap install core"
+        elif [ ${!i} = "webui" ]; then
+            ((i++))
+            open http://0.0.0.0:5001/webui;
         else
             ipfs-help
         fi
