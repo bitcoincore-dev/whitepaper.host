@@ -100,7 +100,6 @@ VOLUME $IPFS_PATH
 # The default logging level
 ENV IPFS_LOGGING ""
 
-RUN apt-get install -y curl
 # This just makes sure that:
 # 1. There's an fs-repo, and initializes one if there isn't.
 # 2. The API and Gateway are accessible from outside the container.

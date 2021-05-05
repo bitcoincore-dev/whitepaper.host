@@ -174,13 +174,9 @@ report:
 	@echo '        - TIME=${TIME}'
 	@echo '        - HOST_USER=${HOST_USER}'
 	@echo '        - HOST_UID=${HOST_UID}'
+	@echo '        - PUBLIC_PORT=${PUBLIC_PORT}'
 	@echo '        - SERVICE_TARGET=${SERVICE_TARGET}'
 	@echo '        - ALPINE_VERSION=${ALPINE_VERSION}'
-	@echo '        - WHISPER_VERSION=${WHISPER_VERSION}'
-	@echo '        - CARBON_VERSION=${CARBON_VERSION}'
-	@echo '        - GRAPHITE_VERSION=${GRAPHITE_VERSION}'
-	@echo '        - STATSD_VERSION=${STATSD_VERSION}'
-	@echo '        - GRAFANA_VERSION=${GRAFANA_VERSION}'
 	@echo '        - PROJECT_NAME=${PROJECT_NAME}'
 	@echo '        - GIT_USER_NAME=${GIT_USER_NAME}'
 	@echo '        - GIT_USER_EMAIL=${GIT_USER_EMAIL}'
@@ -194,17 +190,19 @@ report:
 ################################################################################
 .PHONY: init
 init:
-	$( shell [ -d "/usr/local/bin/ipfs"       ] && install -v bin/ipfs /usr/local/bin/ipfs)
-	$( shell [ -d "/usr/local/bin/ipfs-init"  ] && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-init)
-	$( shell [ -d "/usr/local/bin/ipfs-host"  ] && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-host)
-	$( shell [ -d "/usr/local/bin/ipfs-start" ] && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-start)
+	$( shell [ -d "/usr/local/bin/ipfs" ]        && install -v bin/ipfs /usr/local/bin/ipfs)
+	$( shell [ -d "/usr/local/bin/ipfs-init" ]   && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-init)
+	$( shell [ -d "/usr/local/bin/ipfs-host" ]   && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-host)
+	$( shell [ -d "/usr/local/bin/ipfs-start" ]  && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-start)
+	$( shell [ -d "/usr/local/bin/ipfs-webui" ]  && ln -s /usr/local/bin/ipfs /usr/local/bin/ipfs-webui)
 .PHONY: build-host
 build-host:
 	docker build -f Dockerfile 
 .PHONY: host
 host: init
 	#docker run -d --name ipfs_host_$(TIME) -v $(ipfs_staging):/export -v $(ipfs_data):/data/ipfs -p 127.0.0.1:$(port):8080 -p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:8081:8081 -p 127.0.0.1:5001:5001 ipfs/go-ipfs:latest
-	docker-compose $(VERBOSE) -p $(PROJECT_NAME)_$(HOST_UID) run host -d --name ipfs_host_$(TIME) -v $(ipfs_staging):/export -v $(ipfs_data):/data/ipfs -p 127.0.0.1:$(port):8080 -p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:8081:8081 -p 127.0.0.1:5001:5001 ipfs/go-ipfs:latest
+	#docker-compose $(VERBOSE) -p $(PROJECT_NAME)_$(HOST_UID) run -d --name ipfs_host_$(TIME) -v $(ipfs_staging):/export -v $(ipfs_data):/data/ipfs -p 127.0.0.1:$(public_port):8080 -p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:8081:8081 -p 127.0.0.1:5001:5001 host
+	docker-compose $(VERBOSE) -p $(PROJECT_NAME)_$(HOST_UID) run -d --name ipfs_host_$(TIME) -v $(ipfs_staging):/export -v $(ipfs_data):/data/ipfs -p 127.0.0.1:8080:8080 -p 4001:4001 -p 4001:4001/udp -p 127.0.0.1:8081:8081 -p 127.0.0.1:5001:5001 -p 80:8080 host
 ################################################################################
 package-all:
 	bash -c 'cat ~/GH_TOKEN.txt | docker login docker.pkg.github.com -u RandyMcMillan --password-stdin'
